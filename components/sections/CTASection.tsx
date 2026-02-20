@@ -56,7 +56,7 @@ export default function CTASection() {
                         with precision. Your race-day plan is one click away.
                     </p>
                     <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-                        <Button variant="primary" size="lg" href="#">
+                        <Button variant="primary" size="lg" href="/dashboard/plans">
                             Generate My Plan
                             <ArrowRight size={18} />
                         </Button>

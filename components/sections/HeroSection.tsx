@@ -160,7 +160,7 @@ export default function HeroSection() {
                         </p>
 
                         <div className="flex flex-col sm:flex-row gap-4">
-                            <Button variant="primary" size="lg" href="#cta">
+                            <Button variant="primary" size="lg" href="/dashboard/plans">
                                 Generate My Plan
                                 <ArrowRight size={18} />
                             </Button>

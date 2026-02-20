@@ -2,8 +2,11 @@
 
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Menu, X, Zap } from "lucide-react";
+import { Menu, X, Zap, LayoutDashboard } from "lucide-react";
+import Link from "next/link";
 import Button from "@/components/ui/Button";
+import AuthModal from "@/components/ui/AuthModal";
+import { useAuth } from "@/context/AuthContext";
 
 const navLinks = [
     { label: "Features", href: "/#features" },
@@ -13,14 +16,27 @@ const navLinks = [
 ];
 
 export default function Navbar() {
+    const { user, isAuthenticated, isLoading } = useAuth();
     const [scrolled, setScrolled] = useState(false);
     const [mobileOpen, setMobileOpen] = useState(false);
+    const [authModalOpen, setAuthModalOpen] = useState(false);
+    const [authInitialView, setAuthInitialView] = useState<"login" | "signup">("login");
 
     useEffect(() => {
         const handleScroll = () => setScrolled(window.scrollY > 20);
         window.addEventListener("scroll", handleScroll, { passive: true });
         return () => window.removeEventListener("scroll", handleScroll);
     }, []);
+
+    const openLogin = () => {
+        setAuthInitialView("login");
+        setAuthModalOpen(true);
+    };
+
+    const openSignup = () => {
+        setAuthInitialView("signup");
+        setAuthModalOpen(true);
+    };
 
     return (
         <motion.nav
@@ -58,15 +74,33 @@ export default function Navbar() {
                                 <span className="absolute -bottom-1 left-0 w-0 h-px bg-gradient-to-r from-indigo-500 to-cyan-500 group-hover:w-full transition-all duration-300" />
                             </a>
                         ))}
-                        <a
-                            href="#"
-                            className="text-sm font-medium text-zinc-300 hover:text-white transition-colors duration-200"
-                        >
-                            Log In
-                        </a>
-                        <Button variant="primary" size="sm" href="#cta">
-                            Generate Plan
-                        </Button>
+
+                        {!isLoading && isAuthenticated ? (
+                            /* Logged In State */
+                            <Link
+                                href="/dashboard"
+                                className="flex items-center gap-2 px-4 py-2 rounded-xl bg-[#7f13ec]/15 text-[#a855f7] text-sm font-medium hover:bg-[#7f13ec]/25 transition-all"
+                            >
+                                <LayoutDashboard size={16} />
+                                Dashboard
+                            </Link>
+                        ) : !isLoading ? (
+                            /* Logged Out State */
+                            <>
+                                <button
+                                    onClick={openLogin}
+                                    className="text-sm font-medium text-zinc-300 hover:text-white transition-colors duration-200 cursor-pointer"
+                                >
+                                    Log In
+                                </button>
+                                <button
+                                    onClick={openSignup}
+                                    className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-[#7f13ec] to-[#a855f7] text-white text-sm font-semibold shadow-lg shadow-[#7f13ec]/25 hover:shadow-[#7f13ec]/40 transition-shadow cursor-pointer"
+                                >
+                                    Get Started
+                                </button>
+                            </>
+                        ) : null}
                     </div>
 
                     {/* Mobile Toggle */}
@@ -102,13 +136,40 @@ export default function Navbar() {
                                     {link.label}
                                 </a>
                             ))}
-                            <Button variant="primary" size="sm" href="#cta" className="w-full">
-                                Generate Plan
-                            </Button>
+
+                            {!isLoading && isAuthenticated ? (
+                                <Link
+                                    href="/dashboard"
+                                    className="flex items-center gap-2 w-full px-4 py-2.5 rounded-xl bg-[#7f13ec]/15 text-[#a855f7] text-sm font-medium"
+                                    onClick={() => setMobileOpen(false)}
+                                >
+                                    <LayoutDashboard size={16} />
+                                    Dashboard
+                                </Link>
+                            ) : !isLoading ? (
+                                <>
+                                    <button
+                                        onClick={() => { setMobileOpen(false); openLogin(); }}
+                                        className="block w-full text-left text-sm text-zinc-400 hover:text-white transition-colors py-2 cursor-pointer"
+                                    >
+                                        Log In
+                                    </button>
+                                    <Button variant="primary" size="sm" onClick={() => { setMobileOpen(false); openSignup(); }} className="w-full">
+                                        Get Started
+                                    </Button>
+                                </>
+                            ) : null}
                         </div>
                     </motion.div>
                 )}
             </AnimatePresence>
+
+            {/* Auth Modal */}
+            <AuthModal
+                isOpen={authModalOpen}
+                onClose={() => setAuthModalOpen(false)}
+                initialView={authInitialView}
+            />
         </motion.nav>
     );
 }

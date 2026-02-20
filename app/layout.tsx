@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import "./globals.css";
+import { AuthProvider } from "@/context/AuthContext";
 
 export const metadata: Metadata = {
   title: "RunGen AI – AI-Powered Running Plan Generator",
@@ -54,7 +55,7 @@ export default function RootLayout({
         />
       </head>
       <body className="antialiased bg-zinc-950 text-white font-sans">
-        {children}
+        <AuthProvider>{children}</AuthProvider>
       </body>
     </html>
   );
