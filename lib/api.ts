@@ -232,3 +232,46 @@ export async function apiStravaSync(): Promise<{ message: string; stats: StravaS
         method: "POST",
     });
 }
+
+// ─── Analysis Types ──────────────────────────────────────────
+export interface ActivityData {
+    id: string | number;
+    name: string;
+    type: string;
+    start_date: string;
+    city: string | null;
+    distance_km: number;
+    target_distance_km: number | null;
+    average_pace: string;
+    target_pace: string | null;
+    moving_time_formatted: string;
+    target_time: string | null;
+    elevation_gain: number | null;
+    target_elevation: string | null;
+    average_heartrate: number | null;
+    target_hr: string | null;
+    badge: string | null;
+    ai_note: string | null;
+    ai_note_type: "analysis" | "coach" | null;
+}
+
+export interface AnalysisData {
+    strava_connected: boolean;
+    last_sync_at: string | null;
+    weekly_distance: number;
+    distance_change: number;
+    avg_heart_rate: number;
+    hr_label: string;
+    consistency_days: number;
+    streak_change: number;
+    alignment_score: number;
+    alignment_weekly_change: number;
+    alignment_description: string;
+    volume_data: { day: string; planned: number; actual: number }[];
+    recent_activities: ActivityData[];
+}
+
+// ─── Analysis API Function ───────────────────────────────────
+export async function apiStravaAnalysis(): Promise<AnalysisData> {
+    return apiFetch<AnalysisData>("/strava/analysis");
+}

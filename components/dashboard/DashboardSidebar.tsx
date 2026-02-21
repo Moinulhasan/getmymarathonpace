@@ -7,20 +7,25 @@ import {
     LayoutDashboard,
     ClipboardList,
     BarChart3,
+    Activity,
     User,
     LogOut,
     Zap,
     Menu,
     X,
+    Map,
+    Settings,
+    Unplug,
 } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
 import { useAuth } from "@/context/AuthContext";
 
 const navItems = [
     { label: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
-    { label: "Training Plans", href: "/dashboard/plans", icon: ClipboardList },
-    { label: "Insights", href: "/dashboard/insights", icon: BarChart3 },
-    { label: "Profile", href: "/dashboard/profile", icon: User },
+    { label: "Athlete Analysis", href: "/dashboard/insights", icon: BarChart3 },
+    { label: "Training Plan", href: "/dashboard/plans", icon: ClipboardList },
+    { label: "Routes", href: "/dashboard/routes", icon: Map },
+    { label: "Settings", href: "/dashboard/settings", icon: Settings },
 ];
 
 export default function DashboardSidebar({
@@ -75,9 +80,19 @@ export default function DashboardSidebar({
                 })}
             </nav>
 
-            {/* User Profile + Logout */}
-            <div className="px-3 pb-4 mt-auto">
-                <div className="flex items-center gap-3 px-4 py-3 rounded-xl bg-white/[0.04] border border-white/[0.06] mb-2">
+            {/* Connect Strava Button */}
+            <div className="px-3 mb-4">
+                <button
+                    className="w-full flex items-center justify-center gap-2 py-3 px-4 bg-[#ff5722] hover:bg-[#ff7043] text-white rounded-xl text-sm font-bold transition-all shadow-lg shadow-orange-950/20 group"
+                >
+                    <Unplug size={18} className="group-hover:rotate-12 transition-transform" />
+                    Connect Strava
+                </button>
+            </div>
+
+            {/* User Profile */}
+            <div className="px-3 pb-4">
+                <div className="flex items-center gap-3 px-4 py-3 rounded-xl bg-white/[0.04] border border-white/[0.06]">
                     <div className="w-9 h-9 rounded-full bg-gradient-to-br from-orange-400 to-pink-500 flex items-center justify-center text-white font-bold text-sm">
                         {userInitials}
                     </div>
@@ -86,13 +101,6 @@ export default function DashboardSidebar({
                         <p className="text-xs text-zinc-500 truncate">{user?.email || ""}</p>
                     </div>
                 </div>
-                <button
-                    onClick={() => { setMobileOpen(false); logout(); }}
-                    className="flex items-center gap-3 w-full px-4 py-2.5 rounded-xl text-sm text-zinc-500 hover:text-white hover:bg-white/5 transition-all cursor-pointer"
-                >
-                    <LogOut size={18} />
-                    Logout
-                </button>
             </div>
         </div>
     );
