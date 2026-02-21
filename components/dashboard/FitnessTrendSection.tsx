@@ -1,29 +1,39 @@
 import { Zap, Heart } from "lucide-react";
+import { AnalysisData } from "@/lib/api";
 
-// SVG path data for the fitness and fatigue trend lines
+interface FitnessTrendSectionProps {
+    analysis?: AnalysisData | null;
+}
+
+// SVG path data (Keeping these as reference for the aesthetic chart)
 const fitnessPath = "M 30 180 C 60 175, 90 170, 120 160 C 150 150, 180 145, 210 130 C 240 120, 270 110, 300 95 C 330 85, 360 75, 390 65 C 420 58, 450 50, 480 40 C 510 35, 540 30, 570 25";
 const fatiguePath = "M 30 200 C 60 195, 90 185, 120 180 C 150 175, 180 165, 210 155 C 240 145, 270 135, 300 120 C 330 110, 360 100, 390 85 C 420 75, 450 65, 480 55 C 510 50, 540 48, 570 50";
 
-export default function FitnessTrendSection() {
+export default function FitnessTrendSection({ analysis }: FitnessTrendSectionProps) {
     return (
         <div className="flex flex-col xl:flex-row gap-4">
             {/* Chart */}
             <div className="flex-1 glass-card p-5">
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-5">
                     <div>
-                        <h3 className="text-lg font-bold text-white">Fitness Trend</h3>
-                        <p className="text-xs text-zinc-500">
+                        <div className="flex items-center gap-2">
+                            <h3 className="text-lg font-bold text-white uppercase tracking-tight">Fitness Trend</h3>
+                            {analysis?.last_sync_at && (
+                                <span className="px-1.5 py-0.5 rounded bg-green-500/10 text-[8px] font-black text-green-500 uppercase">Synced</span>
+                            )}
+                        </div>
+                        <p className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">
                             Training Stress Balance (TSB)
                         </p>
                     </div>
                     <div className="flex items-center gap-4">
                         <div className="flex items-center gap-1.5">
                             <div className="w-2 h-2 rounded-full bg-[#a855f7]" />
-                            <span className="text-xs text-zinc-400">Fitness</span>
+                            <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-wider">Fitness</span>
                         </div>
                         <div className="flex items-center gap-1.5">
                             <div className="w-2 h-2 rounded-full bg-cyan-400" />
-                            <span className="text-xs text-zinc-400">Fatigue</span>
+                            <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-wider">Fatigue</span>
                         </div>
                     </div>
                 </div>
@@ -80,10 +90,8 @@ export default function FitnessTrendSection() {
                         />
 
                         {/* X axis labels */}
-                        <text x="30" y="215" fill="#52525b" fontSize="10" fontFamily="Inter">AUG 1</text>
-                        <text x="180" y="215" fill="#52525b" fontSize="10" fontFamily="Inter">AUG 15</text>
-                        <text x="330" y="215" fill="#52525b" fontSize="10" fontFamily="Inter">AUG 30</text>
-                        <text x="520" y="215" fill="#52525b" fontSize="10" fontFamily="Inter">TODAY</text>
+                        <text x="30" y="215" fill="#52525b" fontSize="9" fontWeight="800" fontFamily="Inter" opacity="0.5">MTD</text>
+                        <text x="520" y="215" fill="#52525b" fontSize="9" fontWeight="800" fontFamily="Inter" opacity="0.8">TODAY</text>
                     </svg>
                 </div>
             </div>
@@ -96,31 +104,33 @@ export default function FitnessTrendSection() {
                         <div className="w-8 h-8 rounded-lg bg-[#7f13ec]/20 flex items-center justify-center">
                             <Zap size={16} className="text-[#a855f7]" />
                         </div>
-                        <span className="text-[10px] font-semibold uppercase tracking-wider text-zinc-500">
-                            Current Form
+                        <span className="text-[10px] font-black uppercase tracking-widest text-zinc-500">
+                            Consistency
                         </span>
                     </div>
-                    <p className="text-2xl font-bold text-green-400 mb-2">+14</p>
-                    <p className="text-xs text-zinc-500 leading-relaxed">
-                        &quot;Peak&quot; state detected. Optimal time for intensive interval training blocks.
+                    <p className="text-2xl font-black text-green-400 mb-2 leading-none">{analysis?.consistency_days || 0}d</p>
+                    <p className="text-[11px] text-zinc-500 font-bold leading-relaxed uppercase tracking-tight">
+                        {analysis?.streak_change && analysis.streak_change > 0
+                            ? `+${analysis.streak_change}d increase from last week.`
+                            : "Maintain your streak for peak form."}
                     </p>
                 </div>
 
-                {/* Resting HR */}
+                {/* Resting HR (Avg Heart Rate as proxy for Resting HR if not available) */}
                 <div className="flex-1 glass-card p-5 border-l-2 border-l-orange-400">
                     <div className="flex items-center gap-2.5 mb-3">
                         <div className="w-8 h-8 rounded-lg bg-orange-500/20 flex items-center justify-center">
                             <Heart size={16} className="text-orange-400" />
                         </div>
-                        <span className="text-[10px] font-semibold uppercase tracking-wider text-zinc-500">
-                            Resting HR
+                        <span className="text-[10px] font-black uppercase tracking-widest text-zinc-500">
+                            Avg Heart Rate
                         </span>
                     </div>
-                    <p className="text-2xl font-bold text-white mb-0.5">
-                        42 <span className="text-sm font-normal text-zinc-500">bpm</span>
+                    <p className="text-2xl font-black text-white mb-2 leading-none">
+                        {analysis?.avg_heart_rate || 0} <span className="text-xs font-bold text-zinc-500 uppercase tracking-tighter">bpm</span>
                     </p>
-                    <p className="text-xs text-zinc-500 leading-relaxed">
-                        2 bpm lower than last week. Recovery efficiency is improving.
+                    <p className="text-[11px] text-zinc-500 font-bold leading-relaxed uppercase tracking-tight italic">
+                        &quot;{analysis?.hr_label || "No data yet"}&quot; zone efficiency.
                     </p>
                 </div>
             </div>

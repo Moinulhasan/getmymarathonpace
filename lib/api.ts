@@ -275,3 +275,29 @@ export interface AnalysisData {
 export async function apiStravaAnalysis(): Promise<AnalysisData> {
     return apiFetch<AnalysisData>("/strava/analysis");
 }
+
+// ─── Training Plan API Functions ─────────────────────────
+export async function apiGenerateTrainingPlan(data: any): Promise<any> {
+    return apiFetch("/training-plans/generate", {
+        method: "POST",
+        body: JSON.stringify(data),
+    });
+}
+
+export async function apiSaveTrainingPlan(data: {
+    name: string;
+    race_type: string;
+    race_date: string;
+    target_time?: string;
+    terrain?: string;
+    plan_data: any[];
+}): Promise<{ message: string; plan: any }> {
+    return apiFetch("/training-plans", {
+        method: "POST",
+        body: JSON.stringify(data),
+    });
+}
+
+export async function apiGetCurrentTrainingPlan(): Promise<{ plan: any | null }> {
+    return apiFetch("/training-plans/current");
+}
