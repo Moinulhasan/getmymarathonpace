@@ -25,7 +25,7 @@ const navItems = [
     { label: "Athlete Analysis", href: "/dashboard/insights", icon: BarChart3 },
     { label: "Training Plan", href: "/dashboard/plans", icon: ClipboardList },
     { label: "Routes", href: "/dashboard/routes", icon: Map },
-    { label: "Settings", href: "/dashboard/settings", icon: Settings },
+    { label: "Profile", href: "/dashboard/profile", icon: User },
 ];
 
 export default function DashboardSidebar({
@@ -80,18 +80,9 @@ export default function DashboardSidebar({
                 })}
             </nav>
 
-            {/* Connect Strava Button */}
-            <div className="px-3 mb-4">
-                <button
-                    className="w-full flex items-center justify-center gap-2 py-3 px-4 bg-[#ff5722] hover:bg-[#ff7043] text-white rounded-xl text-sm font-bold transition-all shadow-lg shadow-orange-950/20 group"
-                >
-                    <Unplug size={18} className="group-hover:rotate-12 transition-transform" />
-                    Connect Strava
-                </button>
-            </div>
 
-            {/* User Profile */}
-            <div className="px-3 pb-4">
+            {/* User Profile & Logout */}
+            <div className="px-3 pb-4 space-y-2">
                 <div className="flex items-center gap-3 px-4 py-3 rounded-xl bg-white/[0.04] border border-white/[0.06]">
                     <div className="w-9 h-9 rounded-full bg-gradient-to-br from-orange-400 to-pink-500 flex items-center justify-center text-white font-bold text-sm">
                         {userInitials}
@@ -101,6 +92,13 @@ export default function DashboardSidebar({
                         <p className="text-xs text-zinc-500 truncate">{user?.email || ""}</p>
                     </div>
                 </div>
+                <button
+                    onClick={logout}
+                    className="w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-medium text-red-400 hover:text-red-300 hover:bg-red-400/5 transition-all duration-200"
+                >
+                    <LogOut size={18} />
+                    Logout
+                </button>
             </div>
         </div>
     );

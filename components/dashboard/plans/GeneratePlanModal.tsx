@@ -37,6 +37,7 @@ export default function GeneratePlanModal({ isOpen, onClose, onSuccess }: Genera
     const [isSaving, setIsSaving] = useState(false);
     const [planPreview, setPlanPreview] = useState<any[]>([]);
     const [coachInsight, setCoachInsight] = useState<string>("");
+    const [genError, setGenError] = useState<string | null>(null);
     const [formData, setFormData] = useState({
         weight: "",
         height: "",
@@ -93,15 +94,20 @@ export default function GeneratePlanModal({ isOpen, onClose, onSuccess }: Genera
 
     const handleGenerate = async () => {
         setIsLoading(true);
+        setGenError(null);
         setCurrentTab("preview");
         try {
             const result = await apiGenerateTrainingPlan(formData);
-            if (result.plan) {
+            if (result.plan && Array.isArray(result.plan)) {
                 setPlanPreview(result.plan);
                 setCoachInsight(result.coach_insight || "");
+            } else {
+                setPlanPreview([]);
+                setGenError("The AI response didn't contain a valid training plan structure.");
             }
-        } catch (error) {
+        } catch (error: any) {
             console.error("Generation failed:", error);
+            setGenError(error.message || "An unexpected error occurred during generation.");
         } finally {
             setIsLoading(false);
         }
@@ -402,7 +408,7 @@ export default function GeneratePlanModal({ isOpen, onClose, onSuccess }: Genera
                                                     <p className="text-zinc-500 text-sm">Groq AI is analyzing your biometrics and goals...</p>
                                                 </div>
                                             </div>
-                                        ) : planPreview ? (
+                                        ) : planPreview && planPreview.length > 0 ? (
                                             <div className="space-y-6">
                                                 <div className="flex items-center justify-between">
                                                     <div>
@@ -412,11 +418,18 @@ export default function GeneratePlanModal({ isOpen, onClose, onSuccess }: Genera
                                                     <div className="flex gap-4">
                                                         <div className="text-right">
                                                             <div className="text-[10px] font-bold text-zinc-500 uppercase">Total Mileage</div>
-                                                            <div className="text-xl font-black text-white">164.5 km</div>
+                                                            <div className="text-xl font-black text-white">
+                                                                {planPreview.reduce((acc, day) => {
+                                                                    const match = day.detail?.match(/([\d.]+)/);
+                                                                    return acc + (match ? parseFloat(match[1]) : 0);
+                                                                }, 0).toFixed(1)} km
+                                                            </div>
                                                         </div>
                                                         <div className="text-right">
-                                                            <div className="text-[10px] font-bold text-zinc-500 uppercase">TSS Score</div>
-                                                            <div className="text-xl font-black text-white">420</div>
+                                                            <div className="text-[10px] font-bold text-zinc-500 uppercase">Est. Intensity</div>
+                                                            <div className="text-xl font-black text-white">
+                                                                {Math.round(planPreview.length * 15)} <span className="text-[10px] text-zinc-500">TSS</span>
+                                                            </div>
                                                         </div>
                                                     </div>
                                                 </div>
@@ -460,8 +473,19 @@ export default function GeneratePlanModal({ isOpen, onClose, onSuccess }: Genera
                                             </div>
                                         ) : (
                                             <div className="flex-1 flex flex-col items-center justify-center py-20 text-center">
-                                                <p className="text-zinc-500">Something went wrong. Please try generating again.</p>
-                                                <button onClick={handleGenerate} className="mt-4 text-[#a855f7] font-bold uppercase text-xs">Retry Generation</button>
+                                                <div className="w-16 h-16 bg-red-500/10 rounded-full flex items-center justify-center mb-6 mx-auto">
+                                                    <X size={32} className="text-red-500" />
+                                                </div>
+                                                <h3 className="text-lg font-bold text-white mb-2 uppercase">Execution Paused</h3>
+                                                <p className="text-zinc-500 text-sm max-w-sm mx-auto mb-8 leading-relaxed">
+                                                    {genError || "The AI architect encountered an issue while generating your block. This can happen due to API timeouts or schema mismatches."}
+                                                </p>
+                                                <button
+                                                    onClick={handleGenerate}
+                                                    className="px-8 py-3 rounded-2xl bg-white/[0.05] border border-white/10 text-[#a855f7] font-black uppercase text-xs tracking-widest hover:bg-[#7f13ec] hover:text-white transition-all active:scale-95"
+                                                >
+                                                    Resubmit Request
+                                                </button>
                                             </div>
                                         )}
                                     </motion.div>

@@ -32,88 +32,16 @@ const statCards = [
     },
 ];
 
-/* ── Inline SVG Runner Illustration ── */
-function RunnerIllustration({ className }: { className?: string }) {
+/* ── Hero Runner Image Adjustment ── */
+function RunnerImage({ className }: { className?: string }) {
     return (
-        <svg
-            viewBox="0 0 400 400"
-            fill="none"
-            xmlns="http://www.w3.org/2000/svg"
-            className={className}
-        >
-            <defs>
-                <linearGradient id="bodyGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-                    <stop offset="0%" stopColor="#a855f7" stopOpacity="0.9" />
-                    <stop offset="100%" stopColor="#6366f1" stopOpacity="0.9" />
-                </linearGradient>
-                <linearGradient id="glowGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-                    <stop offset="0%" stopColor="#c084fc" stopOpacity="0.6" />
-                    <stop offset="100%" stopColor="#818cf8" stopOpacity="0.3" />
-                </linearGradient>
-                <filter id="neonGlow" x="-50%" y="-50%" width="200%" height="200%">
-                    <feGaussianBlur stdDeviation="6" result="blur" />
-                    <feMerge>
-                        <feMergeNode in="blur" />
-                        <feMergeNode in="SourceGraphic" />
-                    </feMerge>
-                </filter>
-                <filter id="softGlow" x="-50%" y="-50%" width="200%" height="200%">
-                    <feGaussianBlur stdDeviation="12" result="blur" />
-                    <feMerge>
-                        <feMergeNode in="blur" />
-                        <feMergeNode in="SourceGraphic" />
-                    </feMerge>
-                </filter>
-            </defs>
-
-            {/* Ambient glow behind runner */}
-            <ellipse cx="200" cy="210" rx="80" ry="90" fill="url(#glowGrad)" filter="url(#softGlow)" opacity="0.4" />
-
-            {/* Runner silhouette – dynamic mid-stride pose */}
-            <g filter="url(#neonGlow)" transform="translate(200,200) scale(1.1) translate(-200,-200)">
-                {/* Head */}
-                <circle cx="215" cy="105" r="22" fill="url(#bodyGrad)" />
-                {/* Neck */}
-                <rect x="210" y="125" width="10" height="14" rx="4" fill="url(#bodyGrad)" />
-                {/* Torso – leaning forward */}
-                <path d="M195 138 L230 140 L225 200 L190 195 Z" fill="url(#bodyGrad)" rx="6" />
-                {/* Right arm (forward swing) */}
-                <path d="M228 145 L260 120 L268 130 L238 158" fill="url(#bodyGrad)" strokeLinecap="round" />
-                <path d="M260 120 L250 95 L258 92 L270 118" fill="url(#bodyGrad)" />
-                {/* Left arm (back swing) */}
-                <path d="M198 148 L170 175 L165 168 L192 142" fill="url(#bodyGrad)" />
-                <path d="M170 175 L155 195 L148 190 L164 170" fill="url(#bodyGrad)" />
-                {/* Hips */}
-                <ellipse cx="208" cy="200" rx="22" ry="12" fill="url(#bodyGrad)" />
-                {/* Right leg (forward stride) */}
-                <path d="M220 205 L260 248 L255 256 L215 212" fill="url(#bodyGrad)" />
-                <path d="M260 248 L280 300 L272 304 L252 255" fill="url(#bodyGrad)" />
-                <path d="M280 300 L295 310 L292 318 L275 308" fill="url(#bodyGrad)" />
-                {/* Left leg (back push) */}
-                <path d="M195 207 L165 260 L158 255 L188 204" fill="url(#bodyGrad)" />
-                <path d="M165 260 L135 310 L128 306 L158 256" fill="url(#bodyGrad)" />
-                <path d="M135 310 L120 315 L118 308 L132 305" fill="url(#bodyGrad)" />
-            </g>
-
-            {/* Motion lines */}
-            <g opacity="0.3" stroke="#a855f7" strokeWidth="2" strokeLinecap="round">
-                <line x1="100" y1="160" x2="130" y2="160">
-                    <animate attributeName="x1" values="100;90;100" dur="2s" repeatCount="indefinite" />
-                    <animate attributeName="opacity" values="0.3;0.1;0.3" dur="2s" repeatCount="indefinite" />
-                </line>
-                <line x1="95" y1="185" x2="125" y2="185">
-                    <animate attributeName="x1" values="95;82;95" dur="2.5s" repeatCount="indefinite" />
-                    <animate attributeName="opacity" values="0.2;0.05;0.2" dur="2.5s" repeatCount="indefinite" />
-                </line>
-                <line x1="105" y1="210" x2="135" y2="210">
-                    <animate attributeName="x1" values="105;95;105" dur="1.8s" repeatCount="indefinite" />
-                    <animate attributeName="opacity" values="0.25;0.08;0.25" dur="1.8s" repeatCount="indefinite" />
-                </line>
-            </g>
-
-            {/* Ground shadow */}
-            <ellipse cx="210" cy="330" rx="60" ry="8" fill="#a855f7" opacity="0.1" filter="url(#softGlow)" />
-        </svg>
+        <div className={`relative ${className}`}>
+            <img
+                src="/hero-runner.png"
+                alt="Elite Runner Illustration"
+                className="w-full h-full object-contain filter drop-shadow-[0_0_15px_rgba(168,85,247,0.4)]"
+            />
+        </div>
     );
 }
 
@@ -233,7 +161,7 @@ export default function HeroSection() {
 
                         {/* Circle with purple ring */}
                         <div
-                            className="relative w-[280px] h-[280px] sm:w-[340px] sm:h-[340px] lg:w-[400px] lg:h-[400px] rounded-full flex items-center justify-center"
+                            className="relative w-[280px] h-[280px] sm:w-[340px] sm:h-[340px] lg:w-[400px] lg:h-[400px] rounded-full flex items-center justify-center overflow-visible"
                             style={{
                                 background: "radial-gradient(circle, rgba(24,24,27,1) 60%, rgba(108,43,238,0.12) 100%)",
                                 boxShadow: "0 0 0 2px rgba(108,43,238,0.4), 0 0 60px rgba(108,43,238,0.15), 0 0 120px rgba(108,43,238,0.08)",
@@ -247,8 +175,11 @@ export default function HeroSection() {
                                 }}
                             />
 
-                            {/* Runner SVG illustration */}
-                            <RunnerIllustration className="w-[200px] h-[200px] sm:w-[250px] sm:h-[250px] lg:w-[300px] lg:h-[300px]" />
+                            {/* Internal light source for Multiply blend contrast */}
+                            <div className="absolute inset-0 rounded-full bg-[radial-gradient(circle,rgba(255,255,255,0.8)_0%,transparent_70%)] pointer-events-none" />
+
+                            {/* Runner Image Adjustment */}
+                            <RunnerImage className="w-[300px] h-[300px] sm:w-[380px] sm:h-[380px] lg:w-[460px] lg:h-[460px] z-10 mix-blend-multiply drop-shadow-[0_0_20px_rgba(168,85,247,0.3)]" />
                         </div>
 
                         {/* ── Orbiting Stat Cards ── */}

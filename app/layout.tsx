@@ -54,7 +54,7 @@ export default function RootLayout({
           rel="stylesheet"
         />
       </head>
-      <body className="antialiased bg-zinc-950 text-white font-sans">
+      <body className="antialiased bg-[#191022] text-white font-sans">
         <AuthProvider>{children}</AuthProvider>
       </body>
     </html>

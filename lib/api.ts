@@ -276,6 +276,10 @@ export async function apiStravaAnalysis(): Promise<AnalysisData> {
     return apiFetch<AnalysisData>("/strava/analysis");
 }
 
+export async function apiGetStravaRoutes(): Promise<{ strava_connected: boolean; routes: any[] }> {
+    return apiFetch<{ strava_connected: boolean; routes: any[] }>("/strava/routes");
+}
+
 // ─── Training Plan API Functions ─────────────────────────
 export async function apiGenerateTrainingPlan(data: any): Promise<any> {
     return apiFetch("/training-plans/generate", {
@@ -300,4 +304,47 @@ export async function apiSaveTrainingPlan(data: {
 
 export async function apiGetCurrentTrainingPlan(): Promise<{ plan: any | null }> {
     return apiFetch("/training-plans/current");
+}
+
+export async function apiGetTrainingPlans(): Promise<{ plans: any[] }> {
+    return apiFetch("/training-plans");
+}
+
+export async function apiActivateTrainingPlan(id: number | string): Promise<{ message: string; plan: any }> {
+    return apiFetch(`/training-plans/${id}/activate`, {
+        method: "POST",
+    });
+}
+
+export async function apiPauseTrainingPlan(id: number | string): Promise<any> {
+    return apiFetch(`/training-plans/${id}/pause`, {
+        method: "POST",
+    });
+}
+
+export async function apiArchiveAllTrainingPlans(): Promise<any> {
+    return apiFetch("/training-plans/archive-all", {
+        method: "POST",
+    });
+}
+// ─── Feedback Types ──────────────────────────────────────────
+export interface FeedbackMessage {
+    id: number;
+    user_id: number;
+    message: string;
+    is_from_user: boolean;
+    status: string;
+    created_at: string;
+}
+
+// ─── Feedback API Functions ──────────────────────────────────
+export async function apiGetFeedback(): Promise<FeedbackMessage[]> {
+    return apiFetch<FeedbackMessage[]>("/feedback");
+}
+
+export async function apiSendFeedback(message: string): Promise<FeedbackMessage> {
+    return apiFetch<FeedbackMessage>("/feedback", {
+        method: "POST",
+        body: JSON.stringify({ message }),
+    });
 }

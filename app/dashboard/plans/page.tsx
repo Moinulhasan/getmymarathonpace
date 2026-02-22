@@ -3,7 +3,8 @@
 import { Zap, ChevronLeft, ChevronRight, Calendar, Lock, CheckCircle2, Info, Play, ArrowRight, RefreshCw, SlidersHorizontal, PauseCircle, Heart, TrendingUp, MapPin, Activity, LayoutGrid, List } from "lucide-react";
 import { useState, useEffect, useMemo } from "react";
 import GeneratePlanModal from "@/components/dashboard/plans/GeneratePlanModal";
-import { apiGetCurrentTrainingPlan } from "@/lib/api";
+import { apiGetTrainingPlans, apiActivateTrainingPlan, apiPauseTrainingPlan, apiArchiveAllTrainingPlans } from "@/lib/api";
+import { motion, AnimatePresence } from "framer-motion";
 
 // ─── Helpers ────────────────────────────────────────────────
 const formatDayDate = (date: Date) => {
@@ -98,23 +99,92 @@ export default function TrainingPlansPage() {
     const [currentWeek, setCurrentWeek] = useState(0);
     const [viewType, setViewType] = useState<'week' | 'calendar'>('week');
 
-    const fetchPlan = async () => {
+    const [plans, setPlans] = useState<any[]>([]);
+    const [isActivating, setIsActivating] = useState<number | null>(null);
+    const [isPausing, setIsPausing] = useState(false);
+    const [showArchiveConfirm, setShowArchiveConfirm] = useState(false);
+
+    const fetchPlans = async (isInitial = false) => {
         setIsLoading(true);
         try {
-            const result = await apiGetCurrentTrainingPlan();
-            if (result.plan) {
-                setCurrentPlan(result.plan);
+            const result = await apiGetTrainingPlans();
+            if (result.plans) {
+                setPlans(result.plans);
+                // Set current plan as the first active one or the most recent
+                const active = result.plans.find((p: any) => p.status === 'active' || p.status === 'paused') || result.plans[0];
+                setCurrentPlan(active);
+
+                // Auto-detect current week
+                if (active?.created_at) {
+                    const start = getPlanStartDate(active);
+                    const now = new Date();
+                    const diffTime = Math.abs(now.getTime() - start.getTime());
+                    const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+                    const weekIdx = Math.floor(diffDays / 7);
+
+                    // Cap at plan duration
+                    const totalWks = active.plan_data ? Math.ceil(active.plan_data.length / 7) : 0;
+                    setCurrentWeek(Math.min(Math.max(0, weekIdx), totalWks - 1));
+                }
             }
         } catch (error) {
-            console.error("Failed to fetch plan:", error);
+            console.error("Failed to fetch plans:", error);
         } finally {
             setIsLoading(false);
         }
     };
 
     useEffect(() => {
-        fetchPlan();
+        fetchPlans();
     }, []);
+
+    const handleActivatePlan = async (id: number) => {
+        setIsActivating(id);
+        try {
+            await apiActivateTrainingPlan(id);
+            await fetchPlans();
+        } catch (error) {
+            console.error("Failed to activate plan:", error);
+        } finally {
+            setIsActivating(null);
+        }
+    };
+
+    const handlePausePlan = async () => {
+        if (!currentPlan) return;
+        setIsPausing(true);
+        try {
+            await apiPauseTrainingPlan(currentPlan.id);
+            await fetchPlans();
+        } catch (error) {
+            console.error("Failed to pause/resume plan:", error);
+        } finally {
+            setIsPausing(false);
+        }
+    };
+
+    const handleNewPlanClick = () => {
+        const hasActive = plans.some(p => p.status === 'active' || p.status === 'paused');
+        if (hasActive) {
+            setShowArchiveConfirm(true);
+        } else {
+            setIsGenerateModalOpen(true);
+        }
+    };
+
+    const confirmArchiveAndGenerate = async () => {
+        setIsLoading(true);
+        try {
+            await apiArchiveAllTrainingPlans();
+            await fetchPlans();
+            setShowArchiveConfirm(false);
+            setIsGenerateModalOpen(true);
+        } catch (error) {
+            console.error("Failed to archive plans:", error);
+        } finally {
+            setIsLoading(false);
+        }
+    };
 
     const planStartDate = useMemo(() => getPlanStartDate(currentPlan), [currentPlan]);
     const totalWeeks = currentPlan?.plan_data ? Math.ceil(currentPlan.plan_data.length / 7) : 0;
@@ -161,7 +231,7 @@ export default function TrainingPlansPage() {
                         </button>
                     </div>
                     <button
-                        onClick={() => setIsGenerateModalOpen(true)}
+                        onClick={handleNewPlanClick}
                         className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-gradient-to-r from-[#7f13ec] to-[#a855f7] text-white text-sm font-semibold shadow-lg shadow-[#7f13ec]/25 hover:shadow-[#7f13ec]/40 transition-shadow cursor-pointer flex-shrink-0"
                     >
                         <Zap size={16} className="fill-white" />
@@ -324,6 +394,50 @@ export default function TrainingPlansPage() {
                             </div>
                         </div>
                     </div>
+
+                    {/* Plan History */}
+                    <div className="space-y-4">
+                        <div className="flex items-center justify-between">
+                            <h3 className="text-lg font-black text-white italic uppercase tracking-tighter">Plan History</h3>
+                            <div className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">{plans.length} Plans Generated</div>
+                        </div>
+                        <div className="grid grid-cols-1 gap-3">
+                            {plans.filter(p => p.id !== currentPlan?.id).length > 0 ? (
+                                plans.filter(p => p.id !== currentPlan?.id).map((plan) => (
+                                    <div key={plan.id} className="glass-card p-4 flex items-center justify-between group hover:border-[#7f13ec]/30 transition-all">
+                                        <div className="flex items-center gap-4">
+                                            <div className="w-10 h-10 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center text-zinc-500 group-hover:text-[#a855f7] transition-colors">
+                                                <Calendar size={18} />
+                                            </div>
+                                            <div>
+                                                <h4 className="text-sm font-bold text-white uppercase tracking-tight">{plan.name}</h4>
+                                                <p className="text-[10px] text-zinc-500 uppercase font-bold tracking-widest">
+                                                    {plan.race_type} • {new Date(plan.race_date).toLocaleDateString()}
+                                                </p>
+                                            </div>
+                                        </div>
+                                        <div className="flex items-center gap-3">
+                                            <div className="text-right hidden sm:block mr-4">
+                                                <div className="text-[9px] font-black text-zinc-600 uppercase tracking-widest leading-none mb-1">Status</div>
+                                                <div className={`text-[10px] font-black uppercase ${plan.status === 'active' ? 'text-green-500' : 'text-zinc-500'}`}>{plan.status}</div>
+                                            </div>
+                                            <button
+                                                onClick={() => handleActivatePlan(plan.id)}
+                                                disabled={isActivating === plan.id}
+                                                className="px-4 py-2 rounded-xl bg-white/5 border border-white/10 text-[10px] font-black uppercase text-white hover:bg-[#7f13ec] hover:border-[#7f13ec] transition-all disabled:opacity-50"
+                                            >
+                                                {isActivating === plan.id ? 'Switching...' : 'Switch to Plan'}
+                                            </button>
+                                        </div>
+                                    </div>
+                                ))
+                            ) : (
+                                <div className="p-8 text-center border border-dashed border-white/10 rounded-[2rem] bg-white/[0.01]">
+                                    <p className="text-xs text-zinc-600 font-bold uppercase tracking-widest">No previous plans found</p>
+                                </div>
+                            )}
+                        </div>
+                    </div>
                 </div>
 
                 {/* Right: Sidebar */}
@@ -351,14 +465,22 @@ export default function TrainingPlansPage() {
                         <h3 className="text-sm font-black text-white uppercase mb-4 tracking-tight">Plan Tuner</h3>
                         <div className="space-y-1.5">
                             {[
-                                { icon: RefreshCw, label: "Reschedule Week", color: "text-zinc-500" },
-                                { icon: SlidersHorizontal, label: "Adjust Paces", color: "text-zinc-500" },
-                                { icon: PauseCircle, label: "Pause Plan", color: "text-red-500/80" },
+                                { icon: RefreshCw, label: "Reschedule Week", color: "text-zinc-500", upcoming: true },
+                                { icon: SlidersHorizontal, label: "Adjust Paces", color: "text-zinc-500", upcoming: true },
+                                { icon: PauseCircle, label: currentPlan?.status === 'paused' ? "Resume Plan" : "Pause Plan", color: currentPlan?.status === 'paused' ? "text-green-500" : "text-red-500/80", action: handlePausePlan },
                             ].map((c) => (
-                                <button key={c.label} className="w-full flex items-center justify-between px-4 py-3 rounded-xl bg-white/[0.02] border border-white/[0.04] hover:bg-white/[0.05] transition-all group">
+                                <button
+                                    key={c.label}
+                                    onClick={c.action}
+                                    disabled={c.upcoming || isPausing}
+                                    className="w-full flex items-center justify-between px-4 py-3 rounded-xl bg-white/[0.02] border border-white/[0.04] hover:bg-white/[0.05] transition-all group disabled:opacity-50 disabled:cursor-not-allowed"
+                                >
                                     <div className="flex items-center gap-3">
                                         <c.icon size={14} className={c.color} />
-                                        <span className="text-[10px] font-black uppercase text-white group-hover:text-[#a855f7] transition-colors">{c.label}</span>
+                                        <div className="flex flex-col items-start">
+                                            <span className="text-[10px] font-black uppercase text-white group-hover:text-[#a855f7] transition-colors">{c.label}</span>
+                                            {c.upcoming && <span className="text-[8px] font-bold text-[#a855f7] uppercase tracking-tighter">Upcoming</span>}
+                                        </div>
                                     </div>
                                     <ChevronRight size={12} className="text-zinc-700" />
                                 </button>
@@ -368,10 +490,58 @@ export default function TrainingPlansPage() {
                 </div>
             </div>
 
+            {/* Archive Confirmation Overlay */}
+            <AnimatePresence>
+                {showArchiveConfirm && (
+                    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-6">
+                        <motion.div
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
+                            onClick={() => setShowArchiveConfirm(false)}
+                            className="absolute inset-0 bg-black/80 backdrop-blur-md"
+                        />
+                        <motion.div
+                            initial={{ scale: 0.9, opacity: 0, y: 20 }}
+                            animate={{ scale: 1, opacity: 1, y: 0 }}
+                            exit={{ scale: 0.9, opacity: 0, y: 20 }}
+                            className="relative w-full max-w-md bg-[#130E1E] border border-white/10 rounded-[2.5rem] p-8 shadow-2xl overflow-hidden"
+                        >
+                            <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-[#7f13ec] to-[#a855f7]" />
+                            <div className="w-16 h-16 bg-[#7f13ec]/10 rounded-2xl flex items-center justify-center mb-6 mx-auto">
+                                <Zap size={32} className="text-[#a855f7]" />
+                            </div>
+                            <h2 className="text-2xl font-black text-white italic uppercase tracking-tighter text-center mb-4">
+                                Active Plan Detected
+                            </h2>
+                            <p className="text-zinc-400 text-sm text-center leading-relaxed mb-8">
+                                You currently have an active training plan. To generate a new one, your current plan will be moved to <span className="text-white font-bold">History</span> and deactivated from your calendar.
+                                <br /><br />
+                                Do you want to proceed?
+                            </p>
+                            <div className="grid grid-cols-2 gap-4">
+                                <button
+                                    onClick={() => setShowArchiveConfirm(false)}
+                                    className="py-4 rounded-2xl bg-white/5 border border-white/10 text-white text-xs font-black uppercase tracking-widest hover:bg-white/10 transition-all"
+                                >
+                                    Cancel
+                                </button>
+                                <button
+                                    onClick={confirmArchiveAndGenerate}
+                                    className="py-4 rounded-2xl bg-[#7f13ec] text-white text-xs font-black uppercase tracking-widest hover:bg-[#a855f7] transition-all shadow-lg shadow-[#7f13ec]/20"
+                                >
+                                    Stop & Continue
+                                </button>
+                            </div>
+                        </motion.div>
+                    </div>
+                )}
+            </AnimatePresence>
+
             <GeneratePlanModal
                 isOpen={isGenerateModalOpen}
                 onClose={() => setIsGenerateModalOpen(false)}
-                onSuccess={fetchPlan}
+                onSuccess={fetchPlans}
             />
         </div>
     );

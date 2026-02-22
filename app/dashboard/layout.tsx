@@ -4,6 +4,7 @@ import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import DashboardSidebar from "@/components/dashboard/DashboardSidebar";
+import FeedbackChat from "@/components/dashboard/FeedbackChat";
 
 export default function DashboardLayout({
     children,
@@ -36,5 +37,10 @@ export default function DashboardLayout({
         return null;
     }
 
-    return <DashboardSidebar>{children}</DashboardSidebar>;
+    return (
+        <>
+            <DashboardSidebar>{children}</DashboardSidebar>
+            <FeedbackChat />
+        </>
+    );
 }
