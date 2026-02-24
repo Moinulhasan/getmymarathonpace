@@ -1,3 +1,5 @@
+import { useMemo } from "react";
+
 interface EventHeroCardProps {
     plan?: any;
 }
@@ -10,7 +12,22 @@ export default function EventHeroCard({ plan }: EventHeroCardProps) {
 
     // Calculate progress (crude metric for now based on current date vs plan start/race)
     const totalWeeks = plan?.plan_data ? Math.ceil(plan.plan_data.length / 7) : 0;
-    const progress = totalWeeks > 0 ? 0.35 : 0; // Default or calculated progress
+
+    const progress = useMemo(() => {
+        if (!plan?.created_at || totalWeeks === 0) return 0;
+        const start = new Date(plan.created_at);
+        const dayOfWeek = start.getDay();
+        const diff = start.getDate() - dayOfWeek + (dayOfWeek === 0 ? -6 : 1);
+        const monday = new Date(start.setDate(diff));
+        monday.setHours(0, 0, 0, 0);
+
+        const now = new Date();
+        const diffTime = now.getTime() - monday.getTime();
+        const diffDays = Math.max(0, Math.floor(diffTime / (1000 * 60 * 60 * 24)));
+        const totalDays = totalWeeks * 7;
+
+        return Math.min(1, diffDays / totalDays);
+    }, [plan, totalWeeks]);
 
     // SVG circular progress
     const radius = 52;
@@ -47,7 +64,12 @@ export default function EventHeroCard({ plan }: EventHeroCardProps) {
                     </div>
                 </div>
 
-                <button className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-[#7f13ec] text-white text-sm font-semibold hover:bg-[#6d0fcf] transition-colors cursor-pointer disabled:opacity-50" disabled={!plan}>
+                <button
+                    onClick={() => {
+                        if (!plan) window.location.href = '/dashboard/plans';
+                    }}
+                    className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-[#7f13ec] text-white text-sm font-semibold hover:bg-[#6d0fcf] transition-colors cursor-pointer"
+                >
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                         <path d="M12 20h9" /><path d="M16.376 3.622a1 1 0 0 1 3.002 3.002L7.368 18.635a2 2 0 0 1-.855.506l-2.872.838a.5.5 0 0 1-.62-.62l.838-2.872a2 2 0 0 1 .506-.855z" />
                     </svg>

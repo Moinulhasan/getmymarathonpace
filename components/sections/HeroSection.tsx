@@ -68,7 +68,7 @@ export default function HeroSection() {
                         variants={fadeInLeft}
                         initial="hidden"
                         animate="visible"
-                        className="space-y-8"
+                        className="space-y-8 order-2 lg:order-1"
                     >
                         {/* Badge */}
                         <div className="inline-flex items-center gap-2 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-4 py-1.5 text-xs font-semibold tracking-wide text-emerald-400">
@@ -154,7 +154,7 @@ export default function HeroSection() {
                         variants={fadeInRight}
                         initial="hidden"
                         animate="visible"
-                        className="relative flex justify-center items-center min-h-[420px] sm:min-h-[480px] lg:min-h-[540px]"
+                        className="relative flex justify-center items-center min-h-[420px] sm:min-h-[480px] lg:min-h-[540px] order-1 lg:order-2"
                     >
                         {/* Outer glow */}
                         <div className="absolute w-[340px] h-[340px] sm:w-[400px] sm:h-[400px] lg:w-[460px] lg:h-[460px] rounded-full bg-purple-600/10 blur-3xl pointer-events-none" />

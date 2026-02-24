@@ -287,37 +287,39 @@ export default function TrainingPlansPage() {
                                     </div>
                                 </div>
 
-                                <div className="grid grid-cols-7 gap-1.5">
-                                    {["MON", "TUE", "WED", "THU", "FRI", "SAT", "SUN"].map((h) => (
-                                        <div key={h} className="text-center text-[10px] font-black uppercase tracking-widest text-zinc-600 py-2">
-                                            {h}
-                                        </div>
-                                    ))}
-                                    {weeklyWorkouts.length > 0 ? weeklyWorkouts.map((d: any, idx: number) => (
-                                        <div
-                                            key={idx}
-                                            className={`rounded-2xl px-2 py-4 text-center border transition-all hover:scale-[1.02] cursor-default flex flex-col items-center justify-center min-h-[100px] relative ${d.workout_type === 'long'
-                                                ? "bg-[#7f13ec]/20 border-[#7f13ec]/40 shadow-lg shadow-[#7f13ec]/10"
-                                                : d.workout_type === 'rest'
-                                                    ? "bg-black/40 border-white/[0.03] opacity-40"
-                                                    : "bg-white/[0.03] border-white/[0.08]"
-                                                }`}
-                                        >
-                                            <span className="absolute top-2 left-2 text-[8px] font-black text-zinc-500">{d.date.getDate()}</span>
-                                            <p className={`text-[10px] font-black uppercase leading-tight mb-1 ${d.workout_type === 'long' ? 'text-white' : 'text-zinc-300'}`}>
-                                                {d.label}
-                                            </p>
-                                            {d.detail && (
-                                                <p className="text-[10px] font-bold text-zinc-500">{d.detail}</p>
-                                            )}
-                                        </div>
-                                    )) : (
-                                        Array(7).fill(0).map((_, i) => (
-                                            <div key={i} className="aspect-square rounded-2xl bg-white/[0.02] border border-dashed border-white/[0.05] flex items-center justify-center">
-                                                <Lock size={12} className="text-zinc-800" />
+                                <div className="flex sm:grid sm:grid-cols-7 gap-2 overflow-x-auto pb-6 scrollbar-hide snap-x snap-mandatory">
+                                    {["MON", "TUE", "WED", "THU", "FRI", "SAT", "SUN"].map((h, idx) => {
+                                        const d = weeklyWorkouts[idx];
+                                        return (
+                                            <div key={h} className="flex-shrink-0 w-[140px] sm:w-auto flex flex-col gap-2 snap-start">
+                                                <div className="text-center text-[10px] font-black uppercase tracking-widest text-zinc-600 py-2">
+                                                    {h}
+                                                </div>
+                                                {d ? (
+                                                    <div
+                                                        className={`rounded-2xl px-3 py-5 text-center border transition-all hover:scale-[1.02] cursor-default flex flex-col items-center justify-center min-h-[120px] relative ${d.workout_type === 'long'
+                                                            ? "bg-[#7f13ec]/20 border-[#7f13ec]/40 shadow-lg shadow-[#7f13ec]/10"
+                                                            : d.workout_type === 'rest'
+                                                                ? "bg-black/40 border-white/[0.03] opacity-40"
+                                                                : "bg-white/[0.03] border-white/[0.08]"
+                                                            }`}
+                                                    >
+                                                        <span className="absolute top-2 left-3 text-[9px] font-black text-zinc-600/80">{d.date.getDate()}</span>
+                                                        <p className={`text-[10px] font-black uppercase leading-tight mb-2 break-words line-clamp-2 px-1 ${d.workout_type === 'long' ? 'text-white' : 'text-zinc-300'}`}>
+                                                            {d.label}
+                                                        </p>
+                                                        {d.detail && (
+                                                            <p className="text-[10px] font-bold text-zinc-500 border-t border-white/5 pt-2 w-full truncate px-1">{d.detail}</p>
+                                                        )}
+                                                    </div>
+                                                ) : (
+                                                    <div className="aspect-square rounded-2xl bg-white/[0.02] border border-dashed border-white/[0.05] flex items-center justify-center min-h-[120px]">
+                                                        <Lock size={12} className="text-zinc-800" />
+                                                    </div>
+                                                )}
                                             </div>
-                                        ))
-                                    )}
+                                        );
+                                    })}
                                 </div>
                             </div>
 

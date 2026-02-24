@@ -46,6 +46,10 @@ async function apiFetch<T = AuthResponse>(
         headers["Authorization"] = `Bearer ${token}`;
     }
 
+    if (options.body instanceof FormData) {
+        delete headers["Content-Type"];
+    }
+
     const res = await fetch(`${API_BASE_URL}${endpoint}`, {
         ...options,
         headers,
@@ -295,6 +299,7 @@ export async function apiSaveTrainingPlan(data: {
     target_time?: string;
     terrain?: string;
     plan_data: any[];
+    coach_insight?: string;
 }): Promise<{ message: string; plan: any }> {
     return apiFetch("/training-plans", {
         method: "POST",
@@ -333,6 +338,7 @@ export interface FeedbackMessage {
     user_id: number;
     message: string;
     is_from_user: boolean;
+    attachment_url?: string;
     status: string;
     created_at: string;
 }
@@ -342,7 +348,22 @@ export async function apiGetFeedback(): Promise<FeedbackMessage[]> {
     return apiFetch<FeedbackMessage[]>("/feedback");
 }
 
-export async function apiSendFeedback(message: string): Promise<FeedbackMessage> {
+export async function apiSendFeedback(message: string, attachment?: File): Promise<FeedbackMessage> {
+    if (attachment) {
+        const formData = new FormData();
+        formData.append("message", message);
+        formData.append("attachment", attachment);
+
+        return apiFetch<FeedbackMessage>("/feedback", {
+            method: "POST",
+            body: formData,
+            headers: {
+                // Fetch will automatically set the correct Content-Type for FormData
+                "Content-Type": "",
+            },
+        });
+    }
+
     return apiFetch<FeedbackMessage>("/feedback", {
         method: "POST",
         body: JSON.stringify({ message }),

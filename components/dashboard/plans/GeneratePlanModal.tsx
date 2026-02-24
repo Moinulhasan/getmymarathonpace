@@ -123,6 +123,7 @@ export default function GeneratePlanModal({ isOpen, onClose, onSuccess }: Genera
                 target_time: formData.targetTime,
                 terrain: formData.terrain,
                 plan_data: planPreview,
+                coach_insight: coachInsight,
             });
             onClose();
             if (onSuccess) onSuccess();

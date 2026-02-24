@@ -21,9 +21,9 @@ export default function WeekPlanSection({ plan }: WeekPlanSectionProps) {
         monday.setHours(0, 0, 0, 0);
 
         const now = new Date();
-        const diffTime = Math.abs(now.getTime() - monday.getTime());
-        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-        const currentWeekIndex = Math.floor((diffDays - 1) / 7);
+        const diffTime = now.getTime() - monday.getTime();
+        const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+        const currentWeekIndex = Math.max(0, Math.floor(diffDays / 7));
 
         return plan.plan_data.slice(currentWeekIndex * 7, (currentWeekIndex + 1) * 7).map((w: any, idx: number) => {
             const date = new Date(monday);

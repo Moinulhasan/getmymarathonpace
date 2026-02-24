@@ -62,12 +62,12 @@ export function useGoogleLogin({ onSuccess, onError }: UseGoogleLoginOptions) {
 
     const triggerGoogleLogin = useCallback(() => {
         if (!GOOGLE_CLIENT_ID) {
-            onError?.("Google Client ID not configured. Set NEXT_PUBLIC_GOOGLE_CLIENT_ID in .env.local");
+            onError?.("Google Client ID not configured.");
             return;
         }
 
         if (!window.google) {
-            onError?.("Google Identity Services not loaded yet. Please try again.");
+            onError?.("Google Identity Services not loaded yet.");
             return;
         }
 
@@ -78,16 +78,44 @@ export function useGoogleLogin({ onSuccess, onError }: UseGoogleLoginOptions) {
                     if (response.credential) {
                         onSuccess(response.credential);
                     } else {
-                        onError?.("Google login failed. Please try again.");
+                        onError?.("Google login failed.");
                     }
                 },
             });
             initializedRef.current = true;
         }
 
-        // Trigger One Tap / popup
         window.google.accounts.id.prompt();
     }, [onSuccess, onError]);
 
-    return { triggerGoogleLogin, isReady: !!GOOGLE_CLIENT_ID };
+    const renderGoogleButton = useCallback((containerId: string, options: { theme?: string; size?: string; width?: number } = {}) => {
+        if (!GOOGLE_CLIENT_ID || !window.google) return;
+
+        const container = document.getElementById(containerId);
+        if (!container) return;
+
+        if (!initializedRef.current) {
+            window.google.accounts.id.initialize({
+                client_id: GOOGLE_CLIENT_ID,
+                callback: (response) => {
+                    if (response.credential) {
+                        onSuccess(response.credential);
+                    } else {
+                        onError?.("Google login failed.");
+                    }
+                },
+            });
+            initializedRef.current = true;
+        }
+
+        window.google.accounts.id.renderButton(container, {
+            theme: (options.theme as any) || "filled_blue",
+            size: (options.size as any) || "large",
+            width: options.width,
+            shape: "rectangular",
+            text: "continue_with",
+        });
+    }, [onSuccess, onError]);
+
+    return { triggerGoogleLogin, renderGoogleButton, isReady: !!GOOGLE_CLIENT_ID };
 }

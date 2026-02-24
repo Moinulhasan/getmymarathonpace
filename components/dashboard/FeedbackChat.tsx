@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { MessageCircle, Send, X, MessageSquare, Loader2 } from "lucide-react";
+import { MessageCircle, Send, X, MessageSquare, Loader2, Image as ImageIcon, Paperclip } from "lucide-react";
 import { apiGetFeedback, apiSendFeedback, FeedbackMessage } from "@/lib/api";
 import { format } from "date-fns";
 
@@ -10,6 +10,8 @@ export default function FeedbackChat() {
     const [isOpen, setIsOpen] = useState(false);
     const [messages, setMessages] = useState<FeedbackMessage[]>([]);
     const [newMessage, setNewMessage] = useState("");
+    const [attachment, setAttachment] = useState<File | null>(null);
+    const [attachmentPreview, setAttachmentPreview] = useState<string | null>(null);
     const [isLoading, setIsLoading] = useState(false);
     const [isSending, setIsSending] = useState(false);
     const scrollRef = useRef<HTMLDivElement>(null);
@@ -28,6 +30,13 @@ export default function FeedbackChat() {
         }
     }, [messages]);
 
+    // Cleanup preview URL
+    useEffect(() => {
+        return () => {
+            if (attachmentPreview) URL.revokeObjectURL(attachmentPreview);
+        };
+    }, [attachmentPreview]);
+
     const fetchMessages = async () => {
         setIsLoading(true);
         try {
@@ -40,16 +49,36 @@ export default function FeedbackChat() {
         }
     };
 
+    const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (file) {
+            setAttachment(file);
+            const preview = URL.createObjectURL(file);
+            setAttachmentPreview(preview);
+        }
+    };
+
+    const removeAttachment = () => {
+        setAttachment(null);
+        if (attachmentPreview) {
+            URL.revokeObjectURL(attachmentPreview);
+            setAttachmentPreview(null);
+        }
+    };
+
     const handleSend = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (!newMessage.trim() || isSending) return;
+        if ((!newMessage.trim() && !attachment) || isSending) return;
 
         const messageText = newMessage.trim();
+        const currentAttachment = attachment;
+
         setNewMessage("");
+        removeAttachment();
         setIsSending(true);
 
         try {
-            const sentMessage = await apiSendFeedback(messageText);
+            const sentMessage = await apiSendFeedback(messageText, currentAttachment || undefined);
             setMessages((prev) => [...prev, sentMessage]);
         } catch (error) {
             console.error("Failed to send feedback:", error);
@@ -114,27 +143,66 @@ export default function FeedbackChat() {
                                         className={`flex ${msg.is_from_user ? "justify-end" : "justify-start"}`}
                                     >
                                         <div
-                                            className={`max-w-[80%] p-3 rounded-2xl text-sm ${msg.is_from_user
-                                                    ? "bg-indigo-600 text-white rounded-tr-none"
-                                                    : "bg-white/5 text-zinc-200 border border-white/10 rounded-tl-none"
+                                            className={`max-w-[80%] overflow-hidden rounded-2xl text-sm ${msg.is_from_user
+                                                ? "bg-indigo-600 text-white rounded-tr-none"
+                                                : "bg-white/5 text-zinc-200 border border-white/10 rounded-tl-none"
                                                 }`}
                                         >
-                                            <p className="leading-relaxed">{msg.message}</p>
-                                            <p className={`text-[10px] mt-1.5 ${msg.is_from_user ? "text-indigo-200/70" : "text-zinc-500"
-                                                }`}>
-                                                {format(new Date(msg.created_at), "HH:mm")}
-                                            </p>
+                                            {msg.attachment_url && (
+                                                <div className="p-1">
+                                                    <img
+                                                        src={msg.attachment_url}
+                                                        alt="Attachment"
+                                                        className="rounded-xl max-w-full h-auto object-cover border border-white/5"
+                                                    />
+                                                </div>
+                                            )}
+                                            <div className="p-3">
+                                                <p className="leading-relaxed">{msg.message}</p>
+                                                <p className={`text-[10px] mt-1.5 ${msg.is_from_user ? "text-indigo-200/70" : "text-zinc-500"
+                                                    }`}>
+                                                    {format(new Date(msg.created_at), "HH:mm")}
+                                                </p>
+                                            </div>
                                         </div>
                                     </div>
                                 ))
                             )}
                         </div>
 
+                        {/* Preview Area */}
+                        {attachmentPreview && (
+                            <div className="px-4 py-2 border-t border-white/10 bg-black/20 flex items-center justify-between">
+                                <div className="flex items-center gap-2">
+                                    <div className="w-10 h-10 rounded-lg overflow-hidden border border-white/10 bg-black/40">
+                                        <img src={attachmentPreview} alt="Preview" className="w-full h-full object-cover" />
+                                    </div>
+                                    <span className="text-[10px] text-zinc-400 truncate max-w-[150px]">{attachment?.name}</span>
+                                </div>
+                                <button
+                                    onClick={removeAttachment}
+                                    className="p-1 hover:bg-white/10 rounded-full text-zinc-400 hover:text-white transition-colors"
+                                >
+                                    <X size={14} />
+                                </button>
+                            </div>
+                        )}
+
                         {/* Input Area */}
                         <form
                             onSubmit={handleSend}
                             className="p-4 bg-[#2a1d3d]/50 border-t border-white/10 flex items-center gap-2"
                         >
+                            <label className="p-2.5 rounded-xl bg-white/5 text-zinc-400 hover:text-white hover:bg-white/10 transition-colors cursor-pointer">
+                                <ImageIcon size={18} />
+                                <input
+                                    type="file"
+                                    className="hidden"
+                                    accept="image/*"
+                                    onChange={handleFileChange}
+                                    onClick={(e) => (e.currentTarget.value = '')}
+                                />
+                            </label>
                             <input
                                 type="text"
                                 placeholder="Type your message..."
